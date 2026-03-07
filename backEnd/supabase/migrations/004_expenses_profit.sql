@@ -169,3 +169,5 @@ $$;
 
 -- 9. Add expense categories (can be expanded later)
 COMMENT ON COLUMN expenses.category IS 'Categories: electricity, water, supplies, rent, salaries, other';
+ALTER TABLE expenses 
+ADD COLUMN IF NOT EXISTS date DATE DEFAULT CURRENT_DATE;
