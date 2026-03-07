@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styles */
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #334155 #0f172a;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #0f172a;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #334155;
+    border-radius: 3px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #475569;
+  }
+
+  body {
+    @apply bg-dark-900 text-dark-100 font-sans;
+  }
+}
+
+@layer components {
+  /* Receipt paper base style */
+  .receipt-paper {
+    font-family: "Courier New", "Courier", monospace;
+    line-height: 1.4;
+  }
+
+  /* Receipt print styles — 80mm thermal printer */
+  @media print {
+    /* Hide everything */
+    body * {
+      visibility: hidden !important;
+    }
+
+    /* Show only the receipt */
+    #receipt-content,
+    #receipt-content * {
+      visibility: visible !important;
+    }
+
+    #receipt-content {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 80mm;
+      padding: 4mm 3mm;
+      margin: 0;
+      font-family: "Courier New", "Courier", monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #000 !important;
+      background: #fff !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Remove shadows, borders, backgrounds for clean print */
+    #receipt-content .bg-white {
+      background: #fff !important;
+    }
+
+    /* Ensure dashed borders print */
+    #receipt-content .border-dashed {
+      border-style: dashed !important;
+      border-color: #999 !important;
+    }
+
+    /* Hide print button inside receipt */
+    .print\\:hidden {
+      display: none !important;
+    }
+
+    /* Page settings */
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+  }
+}
