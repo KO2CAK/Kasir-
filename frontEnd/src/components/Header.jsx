@@ -5,7 +5,7 @@ import useAuthStore from "@/stores/authStore";
 import useNotificationStore from "@/stores/notificationStore";
 
 const pageTitles = {
-  "/": "Dashboard",
+  "/dashboard": "Dashboard",
   "/cashier": "Cashier",
   "/inventory": "Inventory Management",
   "/transactions": "Transaction History",
