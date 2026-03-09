@@ -11,6 +11,10 @@ import {
   Globe,
   Percent,
   Image,
+  QrCode,
+  Upload,
+  X,
+  Check,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -30,6 +34,7 @@ const Settings = () => {
     phone: "",
     footer_message: "",
     logo_url: "",
+    qris_image_url: "",
     currency: "IDR",
     tax_rate: "0",
   });
@@ -54,6 +59,7 @@ const Settings = () => {
         phone: settings.phone || "",
         footer_message: settings.footer_message || "",
         logo_url: settings.logo_url || "",
+        qris_image_url: settings.qris_image_url || "",
         currency: settings.currency || "IDR",
         tax_rate: settings.tax_rate?.toString() || "0",
       });
@@ -71,6 +77,7 @@ const Settings = () => {
         phone: formData.phone.trim(),
         footer_message: formData.footer_message.trim(),
         logo_url: formData.logo_url.trim() || null,
+        qris_image_url: formData.qris_image_url.trim() || null,
         currency: formData.currency,
         tax_rate: parseFloat(formData.tax_rate) || 0,
       };
@@ -186,6 +193,30 @@ const Settings = () => {
                     value={formData.logo_url}
                     onChange={(e) => handleChange("logo_url", e.target.value)}
                   />
+                  <Input
+                    label="QRIS Image URL"
+                    placeholder="https://example.com/qris.png"
+                    icon={QrCode}
+                    value={formData.qris_image_url}
+                    onChange={(e) =>
+                      handleChange("qris_image_url", e.target.value)
+                    }
+                  />
+                  {formData.qris_image_url && (
+                    <div className="mt-2 p-3 bg-dark-700 rounded-lg">
+                      <p className="text-xs text-dark-400 mb-2">
+                        QRIS Preview:
+                      </p>
+                      <img
+                        src={formData.qris_image_url}
+                        alt="QRIS Preview"
+                        className="h-32 mx-auto object-contain"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </Card.Content>
             </Card>

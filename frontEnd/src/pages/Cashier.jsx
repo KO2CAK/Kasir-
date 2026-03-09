@@ -643,16 +643,30 @@ const Cashier = () => {
         size="md"
       >
         <div className="text-center space-y-5">
-          {/* QR Code */}
+          {/* QR Code or Custom Image */}
           <div className="bg-white rounded-2xl p-6 inline-block mx-auto">
-            <QRCodeSVG
-              value={generateQrisValue()}
-              size={220}
-              level="H"
-              includeMargin={false}
-              bgColor="#ffffff"
-              fgColor="#000000"
-            />
+            {settings?.qris_image_url ? (
+              <img
+                src={settings.qris_image_url}
+                alt="QRIS Payment"
+                className="w-52 h-52 object-contain"
+                onError={(e) => {
+                  // Fallback to generated QR if image fails
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "block";
+                }}
+              />
+            ) : null}
+            <div className={settings?.qris_image_url ? "hidden" : ""}>
+              <QRCodeSVG
+                value={generateQrisValue()}
+                size={220}
+                level="H"
+                includeMargin={false}
+                bgColor="#ffffff"
+                fgColor="#000000"
+              />
+            </div>
           </div>
 
           {/* Payment Info */}

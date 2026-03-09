@@ -27,6 +27,7 @@ const useSettingsStore = create((set, get) => ({
         phone: "",
         footer_message: "Thank you for your purchase!",
         logo_url: null,
+        qris_image_url: null,
         currency: "IDR",
         tax_rate: 0,
       };
