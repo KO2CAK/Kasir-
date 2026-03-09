@@ -15,11 +15,13 @@ import {
   Upload,
   X,
   Check,
+  Link,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import useSettingsStore from "@/stores/settingsStore";
+import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 
 const Settings = () => {
@@ -28,6 +30,9 @@ const Settings = () => {
   const isMounted = useRef(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [uploadingQris, setUploadingQris] = useState(false);
+  const [qrisMode, setQrisMode] = useState("upload"); // "upload" or "link"
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     store_name: "",
     address: "",
@@ -96,6 +101,62 @@ const Settings = () => {
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleQrisFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be less than 2MB");
+      return;
+    }
+
+    setUploadingQris(true);
+
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split(".").pop();
+      const fileName = `qris_${Date.now()}.${fileExt}`;
+      const filePath = `qris/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("store-assets")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("store-assets")
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Update form data
+      setFormData((prev) => ({ ...prev, qris_image_url: publicUrl }));
+      toast.success("QRIS image uploaded successfully!");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setUploadingQris(false);
+    }
+  };
+
+  const removeQrisImage = () => {
+    setFormData((prev) => ({ ...prev, qris_image_url: "" }));
   };
 
   if (loading) {
@@ -202,7 +263,97 @@ const Settings = () => {
                       handleChange("qris_image_url", e.target.value)
                     }
                   />
-                  {formData.qris_image_url && (
+
+                  {/* QRIS Upload Section */}
+                  <div className="space-y-3">
+                    {/* Mode Toggle */}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQrisMode("upload")}
+                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                          qrisMode === "upload"
+                            ? "bg-primary-600 text-white"
+                            : "bg-dark-700 text-dark-400 hover:bg-dark-600"
+                        }`}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQrisMode("link")}
+                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                          qrisMode === "link"
+                            ? "bg-primary-600 text-white"
+                            : "bg-dark-700 text-dark-400 hover:bg-dark-600"
+                        }`}
+                      >
+                        <Link className="w-4 h-4" />
+                        Link URL
+                      </button>
+                    </div>
+
+                    {/* Upload Mode */}
+                    {qrisMode === "upload" && (
+                      <div className="border-2 border-dashed border-dark-600 rounded-lg p-4 text-center hover:border-primary-500/50 transition-colors">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          onChange={handleQrisFileSelect}
+                          className="hidden"
+                        />
+                        {uploadingQris ? (
+                          <div className="flex items-center justify-center gap-2 text-dark-400">
+                            <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-sm">Uploading...</span>
+                          </div>
+                        ) : formData.qris_image_url ? (
+                          <div className="space-y-3">
+                            <img
+                              src={formData.qris_image_url}
+                              alt="QRIS Preview"
+                              className="h-32 mx-auto object-contain"
+                            />
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="text-xs text-primary-400 hover:text-primary-300"
+                              >
+                                Change Image
+                              </button>
+                              <span className="text-dark-600">|</span>
+                              <button
+                                type="button"
+                                onClick={removeQrisImage}
+                                className="text-xs text-red-400 hover:text-red-300"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex flex-col items-center gap-2 text-dark-400 hover:text-dark-300"
+                          >
+                            <Upload className="w-8 h-8" />
+                            <span className="text-sm">
+                              Click to upload QRIS image
+                            </span>
+                            <span className="text-xs text-dark-500">
+                              Max 2MB (PNG, JPG, JPEG)
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {formData.qris_image_url && qrisMode === "link" && (
                     <div className="mt-2 p-3 bg-dark-700 rounded-lg">
                       <p className="text-xs text-dark-400 mb-2">
                         QRIS Preview:
