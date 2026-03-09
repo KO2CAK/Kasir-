@@ -9,6 +9,9 @@ const pageTitles = {
   "/cashier": "Cashier",
   "/inventory": "Inventory Management",
   "/transactions": "Transaction History",
+  "/expenses": "Expenses",
+  "/reports": "Reports",
+  "/settings": "Settings",
 };
 
 const Header = () => {
