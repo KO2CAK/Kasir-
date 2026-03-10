@@ -78,26 +78,13 @@ const Inventory = () => {
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
-      // Get account_id for the current user
-      let accountId = null;
-      if (userId) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("account_id")
-          .eq("id", userId)
-          .single();
-        accountId = profileData?.account_id;
-      }
-
       let query = supabase
         .from("products")
         .select("*, categories(name)")
         .order("created_at", { ascending: false });
 
-      // Filter by account_id (shared data) if available, otherwise fallback to user_id
-      if (accountId) {
-        query = query.eq("account_id", accountId);
-      } else if (userId) {
+      // Filter by user_id for multi-tenant isolation
+      if (userId) {
         query = query.eq("user_id", userId);
       }
 
@@ -126,23 +113,10 @@ const Inventory = () => {
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
-      // Get account_id for the current user
-      let accountId = null;
-      if (userId) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("account_id")
-          .eq("id", userId)
-          .single();
-        accountId = profileData?.account_id;
-      }
-
       let query = supabase.from("categories").select("*").order("name");
 
-      // Filter by account_id (shared data) if available, otherwise fallback to user_id
-      if (accountId) {
-        query = query.eq("account_id", accountId);
-      } else if (userId) {
+      // Filter by user_id for multi-tenant isolation
+      if (userId) {
         query = query.eq("user_id", userId);
       }
 
@@ -205,19 +179,9 @@ const Inventory = () => {
           ? formData.category_id
           : null;
 
-      // Get account_id for the current user
       const userId = sessionData.user.id;
-      let accountId = null;
-      if (userId) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("account_id")
-          .eq("id", userId)
-          .single();
-        accountId = profileData?.account_id;
-      }
 
-      // 3. Build product data with explicit type casting and user_id/account_id for multi-tenant
+      // 3. Build product data with user_id for multi-tenant
       const productData = {
         name: formData.name.trim(),
         sku: formData.sku.trim(),
@@ -227,7 +191,6 @@ const Inventory = () => {
         image_url: formData.image_url.trim() || null,
         is_active: Boolean(formData.is_active),
         user_id: userId, // Link to user for multi-tenant
-        account_id: accountId, // Link to account for shared data
       };
 
       console.log(
@@ -396,17 +359,6 @@ const Inventory = () => {
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
-      // Get account_id for the current user
-      let accountId = null;
-      if (userId) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("account_id")
-          .eq("id", userId)
-          .single();
-        accountId = profileData?.account_id;
-      }
-
       if (!userId) {
         toast.error("You must be logged in to create a category");
         setSavingCategory(false);
@@ -418,7 +370,6 @@ const Inventory = () => {
           name: categoryForm.name.trim(),
           description: categoryForm.description.trim() || null,
           user_id: userId, // Link to user for multi-tenant
-          account_id: accountId, // Link to account for shared data
         },
       ]);
       if (error) throw error;
