@@ -117,6 +117,17 @@ const Cashier = () => {
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
+      // Get account_id for the current user
+      let accountId = null;
+      if (userId) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("account_id")
+          .eq("id", userId)
+          .single();
+        accountId = profileData?.account_id;
+      }
+
       let query = supabase
         .from("products")
         .select("*, categories(name)")
@@ -124,8 +135,10 @@ const Cashier = () => {
         .gt("stock", 0)
         .order("name");
 
-      // Filter by user_id if logged in (for multi-tenant)
-      if (userId) {
+      // Filter by account_id (shared data) if available, otherwise fallback to user_id
+      if (accountId) {
+        query = query.eq("account_id", accountId);
+      } else if (userId) {
         query = query.eq("user_id", userId);
       }
 
@@ -155,10 +168,23 @@ const Cashier = () => {
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
+      // Get account_id for the current user
+      let accountId = null;
+      if (userId) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("account_id")
+          .eq("id", userId)
+          .single();
+        accountId = profileData?.account_id;
+      }
+
       let query = supabase.from("categories").select("*").order("name");
 
-      // Filter by user_id if logged in (for multi-tenant)
-      if (userId) {
+      // Filter by account_id (shared data) if available, otherwise fallback to user_id
+      if (accountId) {
+        query = query.eq("account_id", accountId);
+      } else if (userId) {
         query = query.eq("user_id", userId);
       }
 
