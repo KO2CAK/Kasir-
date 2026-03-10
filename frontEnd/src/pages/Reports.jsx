@@ -47,6 +47,10 @@ const Reports = () => {
   const fetchReportData = async () => {
     setLoading(true);
     try {
+      // Get current user for multi-tenant
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
       // Calculate date range
       const today = new Date();
       let startDate = new Date();
@@ -62,19 +66,31 @@ const Reports = () => {
       const startDateStr = startDate.toISOString().split("T")[0];
 
       // Fetch transactions
-      const { data: transactions, error: txError } = await supabase
+      let txQuery = supabase
         .from("transactions")
         .select("*, transaction_items(*, products(*))")
         .gte("created_at", startDate.toISOString());
 
+      if (userId) {
+        txQuery = txQuery.eq("user_id", userId);
+      }
+
+      const { data: transactions, error: txError } = await txQuery;
+
       if (txError) throw txError;
 
       // Fetch expenses with date column and proper sorting
-      const { data: expenses, error: expError } = await supabase
+      let expQuery = supabase
         .from("expenses")
         .select("amount, date")
         .gte("date", startDateStr)
         .order("date", { ascending: false });
+
+      if (userId) {
+        expQuery = expQuery.eq("user_id", userId);
+      }
+
+      const { data: expenses, error: expError } = await expQuery;
 
       if (expError) throw expError;
 
