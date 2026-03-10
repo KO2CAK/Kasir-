@@ -340,7 +340,7 @@ const Settings = () => {
                             onClick={() => fileInputRef.current?.click()}
                             className="flex flex-col items-center gap-2 text-dark-400 hover:text-dark-300"
                           >
-                            <Upload className="w-8 h-8" />
+                            <Upload className="w-8 h-8 content-center" />
                             <span className="text-sm">
                               Click to upload QRIS image
                             </span>
