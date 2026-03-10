@@ -296,7 +296,7 @@ const Settings = () => {
 
                     {/* Upload Mode */}
                     {qrisMode === "upload" && (
-                      <div className="border-2 border-dashed border-dark-600 rounded-lg p-4 text-center hover:border-primary-500/50 transition-colors">
+                      <div className="border-2 border-dashed border-dark-600 rounded-lg p-6 hover:border-primary-500/50 transition-colors">
                         <input
                           type="file"
                           ref={fileInputRef}
@@ -335,19 +335,21 @@ const Settings = () => {
                             </div>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex flex-col items-center justify-center gap-2 text-dark-400 hover:text-dark-300 w-full py-4"
-                          >
-                            <Upload className="w-10 h-10" />
-                            <span className="text-sm">
-                              Click to upload QRIS image
-                            </span>
-                            <span className="text-xs text-dark-500">
-                              Max 2MB (PNG, JPG, JPEG)
-                            </span>
-                          </button>
+                          <div className="flex flex-col items-center">
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="flex flex-col items-center justify-center gap-3 text-dark-400 hover:text-dark-300 px-6 py-4 rounded-lg hover:bg-dark-700/50 transition-colors"
+                            >
+                              <Upload className="w-12 h-12" />
+                              <span className="text-sm font-medium">
+                                Click to upload QRIS image
+                              </span>
+                              <span className="text-xs text-dark-500">
+                                Max 2MB (PNG, JPG, JPEG)
+                              </span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     )}
