@@ -36,8 +36,8 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const PublicRoute = ({ children }) => {
-  const { user, loading } = useAuthStore();
+const AdminRoute = ({ children }) => {
+  const { profile, loading } = useAuthStore();
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center">
@@ -45,7 +45,28 @@ const PublicRoute = ({ children }) => {
       </div>
     );
   }
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (!profile || profile.role !== "admin") {
+    return <Navigate to="/cashier" replace />;
+  }
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const { user, profile, loading } = useAuthStore();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (user) {
+    // Redirect based on role
+    if (profile?.role === "admin") {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return <Navigate to="/cashier" replace />;
+  }
   return children;
 };
 
@@ -118,7 +139,14 @@ const App = () => {
             </ProtectedRoute>
           }
         >
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/dashboard"
+            element={
+              <AdminRoute>
+                <Dashboard />
+              </AdminRoute>
+            }
+          />
           <Route path="/cashier" element={<Cashier />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/transactions" element={<Transactions />} />

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Store, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "@/stores/authStore";
+import { supabase } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
@@ -30,7 +31,25 @@ const Login = () => {
     try {
       await signIn(formData.email, formData.password);
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      // Redirect based on role - get profile from localStorage or wait for it
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile?.role === "admin") {
+          navigate("/dashboard");
+        } else {
+          navigate("/cashier");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast.error(error.message || "Failed to sign in");
     } finally {
