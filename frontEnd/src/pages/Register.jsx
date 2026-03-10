@@ -1,16 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  Store,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  User,
-  Shield,
-  ShoppingCart,
-  ArrowLeft,
-} from "lucide-react";
+import { Store, Mail, Lock, Eye, EyeOff, User, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "@/stores/authStore";
 import Button from "@/components/ui/Button";
@@ -26,7 +16,6 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "admin",
   });
 
   const handleChange = (e) => {
@@ -57,11 +46,12 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Always register as admin - cashiers are added by admin later
       const data = await signUp(
         formData.email,
         formData.password,
         formData.fullName,
-        formData.role,
+        "admin",
       );
 
       if (data?.user?.identities?.length === 0) {
@@ -82,21 +72,6 @@ const Register = () => {
       setLoading(false);
     }
   };
-
-  const roles = [
-    {
-      id: "admin",
-      label: "Admin",
-      description: "Full access to all features",
-      icon: Shield,
-    },
-    {
-      id: "cashier",
-      label: "Cashier",
-      description: "Access to cashier & transactions",
-      icon: ShoppingCart,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-dark-950 flex flex-col">
@@ -188,40 +163,6 @@ const Register = () => {
                 onChange={handleChange}
                 required
               />
-
-              {/* Role Selection */}
-              <div>
-                <label className="block text-sm font-medium text-dark-300 mb-3">
-                  Select Role
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {roles.map((role) => (
-                    <button
-                      key={role.id}
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, role: role.id }))
-                      }
-                      className={`
-                        flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200
-                        ${
-                          formData.role === role.id
-                            ? "border-emerald-600 bg-emerald-600/10 text-emerald-400"
-                            : "border-dark-700 bg-dark-800/50 text-dark-400 hover:border-dark-600"
-                        }
-                      `}
-                    >
-                      <role.icon className="h-6 w-6" />
-                      <span className="text-sm font-semibold">
-                        {role.label}
-                      </span>
-                      <span className="text-[10px] text-dark-500 text-center leading-tight">
-                        {role.description}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               <Button
                 type="submit"

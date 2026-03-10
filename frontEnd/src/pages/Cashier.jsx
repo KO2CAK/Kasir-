@@ -114,12 +114,22 @@ const Cashier = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      let query = supabase
         .from("products")
         .select("*, categories(name)")
         .eq("is_active", true)
         .gt("stock", 0)
         .order("name");
+
+      // Filter by user_id if logged in (for multi-tenant)
+      if (userId) {
+        query = query.eq("user_id", userId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -142,10 +152,17 @@ const Cashier = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name");
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      let query = supabase.from("categories").select("*").order("name");
+
+      // Filter by user_id if logged in (for multi-tenant)
+      if (userId) {
+        query = query.eq("user_id", userId);
+      }
+
+      const { data } = await query;
 
       // Only update state if component is still mounted
       if (isMounted.current) {

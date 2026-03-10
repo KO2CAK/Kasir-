@@ -57,10 +57,20 @@ const Transactions = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      let query = supabase
         .from("transactions")
         .select("*, profiles(full_name)")
         .order("created_at", { ascending: false });
+
+      // Filter by user_id if logged in (for multi-tenant)
+      if (userId) {
+        query = query.eq("user_id", userId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

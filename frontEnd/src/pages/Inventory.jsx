@@ -75,10 +75,20 @@ const Inventory = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      let query = supabase
         .from("products")
         .select("*, categories(name)")
         .order("created_at", { ascending: false });
+
+      // Filter by user_id if logged in (for multi-tenant)
+      if (userId) {
+        query = query.eq("user_id", userId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
       // Only update state if component is still mounted
@@ -100,10 +110,17 @@ const Inventory = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name");
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      let query = supabase.from("categories").select("*").order("name");
+
+      // Filter by user_id if logged in (for multi-tenant)
+      if (userId) {
+        query = query.eq("user_id", userId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
       // Only update state if component is still mounted
@@ -162,7 +179,7 @@ const Inventory = () => {
           ? formData.category_id
           : null;
 
-      // 3. Build product data with explicit type casting
+      // 3. Build product data with explicit type casting and user_id for multi-tenant
       const productData = {
         name: formData.name.trim(),
         sku: formData.sku.trim(),
@@ -171,6 +188,7 @@ const Inventory = () => {
         stock: Math.floor(Number(formData.stock)),
         image_url: formData.image_url.trim() || null,
         is_active: Boolean(formData.is_active),
+        user_id: sessionData.user.id, // Link to user for multi-tenant
       };
 
       console.log(
@@ -335,10 +353,21 @@ const Inventory = () => {
     e.preventDefault();
     setSavingCategory(true);
     try {
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      if (!userId) {
+        toast.error("You must be logged in to create a category");
+        setSavingCategory(false);
+        return;
+      }
+
       const { error } = await supabase.from("categories").insert([
         {
           name: categoryForm.name.trim(),
           description: categoryForm.description.trim() || null,
+          user_id: userId, // Link to user for multi-tenant
         },
       ]);
       if (error) throw error;
