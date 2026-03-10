@@ -216,6 +216,10 @@ const Cashier = () => {
       const taxAmount = getTaxAmount();
       const changeAmount = paymentMethod === "cash" ? paid - total : 0;
 
+      // For cashier: save with owner's user_id so both admin and cashier can see the transaction
+      // cashier_id tracks who made the transaction
+      const ownerId = profile?.owner_id || userId;
+
       // Create transaction
       const { data: transaction, error: txError } = await supabase
         .from("transactions")
@@ -223,7 +227,7 @@ const Cashier = () => {
           {
             transaction_number: transactionNumber,
             cashier_id: user.id,
-            user_id: userId,
+            user_id: ownerId, // Use owner's ID so both admin and cashier can see it
             subtotal: subtotal,
             discount: discountAmount,
             tax: taxAmount,
