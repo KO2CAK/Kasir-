@@ -48,10 +48,19 @@ const Expenses = () => {
   const fetchExpenses = async () => {
     setLoading(true);
     try {
+      // Get current user for multi-tenant
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
       let query = supabase
         .from("expenses")
         .select("*")
         .order("date", { ascending: false });
+
+      // Filter by user_id for multi-tenant
+      if (userId) {
+        query = query.eq("user_id", userId);
+      }
 
       // Apply date filter
       const today = new Date();
@@ -84,6 +93,15 @@ const Expenses = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Get current user for multi-tenant
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      if (!userId) {
+        toast.error("You must be logged in to add expenses");
+        return;
+      }
+
       if (editingExpense) {
         // Update expense
         const { error } = await supabase
@@ -99,13 +117,14 @@ const Expenses = () => {
         if (error) throw error;
         toast.success("Expense updated successfully");
       } else {
-        // Create expense
+        // Create expense with user_id for multi-tenant
         const { error } = await supabase.from("expenses").insert([
           {
             description: formData.description,
             category: formData.category,
             amount: parseFloat(formData.amount),
             date: formData.date,
+            user_id: userId, // Link to user for multi-tenant
           },
         ]);
 
