@@ -14,70 +14,23 @@ import {
   BarChart3,
   Users,
 } from "lucide-react";
-
 import useAuthStore from "@/stores/authStore";
 
-// Admin navigation - full access
 const adminNavigation = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Cashier",
-    href: "/cashier",
-    icon: ShoppingCart,
-  },
-  {
-    name: "Inventory",
-    href: "/inventory",
-    icon: Package,
-  },
-  {
-    name: "Transactions",
-    href: "/transactions",
-    icon: Receipt,
-  },
-  {
-    name: "Expenses",
-    href: "/expenses",
-    icon: Wallet,
-  },
-  {
-    name: "Reports",
-    href: "/reports",
-    icon: BarChart3,
-  },
-  {
-    name: "Users",
-    href: "/users",
-    icon: Users,
-  },
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Cashier", href: "/cashier", icon: ShoppingCart },
+  { name: "Inventory", href: "/inventory", icon: Package },
+  { name: "Transactions", href: "/transactions", icon: Receipt },
+  { name: "Expenses", href: "/expenses", icon: Wallet },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Users", href: "/users", icon: Users },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-// Cashier navigation - limited access
 const cashierNavigation = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Cashier",
-    href: "/cashier",
-    icon: ShoppingCart,
-  },
-  {
-    name: "Transactions",
-    href: "/transactions",
-    icon: Receipt,
-  },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Cashier", href: "/cashier", icon: ShoppingCart },
+  { name: "Transactions", href: "/transactions", icon: Receipt },
 ];
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -85,8 +38,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
   const { signOut, profile } = useAuthStore();
 
-  // Get navigation based on user role
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = profile && profile.role === "admin";
   const navigation = isAdmin ? adminNavigation : cashierNavigation;
 
   const handleSignOut = async () => {
@@ -100,15 +52,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
   return (
     <aside
-      className={`
-        fixed top-0 left-0 z-40 h-screen
-        bg-dark-950 border-r border-dark-800
-        transition-all duration-300 ease-in-out
-        flex flex-col
-        ${collapsed ? "w-[72px]" : "w-64"}
-      `}
+      className={`fixed top-0 left-0 z-40 h-screen bg-dark-950 border-r border-dark-800 transition-all duration-300 ease-in-out flex flex-col ${collapsed ? "w-[72px]" : "w-64"}`}
     >
-      {/* Logo Section */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-dark-800">
         <div className="flex-shrink-0 w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/20">
           <Store className="h-5 w-5 text-white" />
@@ -125,45 +70,26 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
-
           return (
             <NavLink
               key={item.name}
               to={item.href}
-              className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-lg
-                transition-all duration-200 group relative
-                ${
-                  isActive
-                    ? "bg-primary-600/10 text-primary-400"
-                    : "text-dark-400 hover:bg-dark-800/60 hover:text-dark-200"
-                }
-              `}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${isActive ? "bg-primary-600/10 text-primary-400" : "text-dark-400 hover:bg-dark-800/60 hover:text-dark-200"}`}
             >
-              {/* Active indicator */}
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full" />
               )}
-
               <item.icon
-                className={`h-5 w-5 flex-shrink-0 ${
-                  isActive
-                    ? "text-primary-400"
-                    : "text-dark-500 group-hover:text-dark-300"
-                }`}
+                className={`h-5 w-5 flex-shrink-0 ${isActive ? "text-primary-400" : "text-dark-500 group-hover:text-dark-300"}`}
               />
-
               {!collapsed && (
                 <span className="text-sm font-medium truncate">
                   {item.name}
                 </span>
               )}
-
-              {/* Tooltip for collapsed state */}
               {collapsed && (
                 <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-xs font-medium text-dark-200 whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl z-50">
                   {item.name}
@@ -174,7 +100,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         })}
       </nav>
 
-      {/* User Section */}
       <div className="px-3 py-3 border-t border-dark-800">
         {!collapsed && profile && (
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
@@ -191,22 +116,17 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 {profile.role || "cashier"}
               </p>
             </div>
+          </div>
         )}
-
         <button
           onClick={handleSignOut}
-          className={`
-            flex items-center gap-3 w-full px-3 py-2.5 rounded-lg
-            text-dark-400 hover:bg-red-500/10 hover:text-red-400
-            transition-all duration-200 group
-          `}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-dark-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 group"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Sign Out</span>}
         </button>
       </div>
 
-      {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="absolute -right-3 top-20 w-6 h-6 bg-dark-800 border border-dark-700 rounded-full flex items-center justify-center text-dark-400 hover:text-dark-200 hover:bg-dark-700 transition-colors shadow-lg"
