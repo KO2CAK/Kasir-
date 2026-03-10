@@ -62,7 +62,7 @@ const Transactions = () => {
 
       let query = supabase
         .from("transactions")
-        .select("*, profiles(full_name)")
+        .select("*, profiles!transactions_cashier_id_fkey(full_name)")
         .order("created_at", { ascending: false });
 
       // Filter by user_id if logged in (for multi-tenant)
@@ -128,7 +128,7 @@ const Transactions = () => {
 
       const { data: updatedTx } = await supabase
         .from("transactions")
-        .select("*, profiles(full_name)")
+        .select("*, profiles!transactions_cashier_id_fkey(full_name)")
         .eq("id", selectedTransaction.id)
         .single();
 

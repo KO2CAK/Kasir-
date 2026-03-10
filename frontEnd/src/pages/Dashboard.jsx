@@ -127,7 +127,7 @@ const Dashboard = () => {
       // Fetch recent transactions
       let recentQuery = supabase
         .from("transactions")
-        .select("*, profiles(full_name)")
+        .select("*, profiles!transactions_cashier_id_fkey(full_name)")
         .order("created_at", { ascending: false })
         .limit(5);
 
