@@ -72,22 +72,19 @@ const Dashboard = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
       // Get current user for multi-tenant
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
-      // Fetch today's transactions
-      let txQuery = supabase
+      // Fetch today's transactions - let RLS handle visibility
+      // Admin sees all, Cashier sees only their own
+      const { data: todayTx, error: txError } = await supabase
         .from("transactions")
         .select("total")
         .gte("created_at", today.toISOString());
-
-      // Filter by user_id for multi-tenant
-      if (userId) {
-        txQuery = txQuery.eq("user_id", userId);
-      }
-
-      const { data: todayTx, error: txError } = await txQuery;
 
       if (txError) throw txError;
 
@@ -95,20 +92,14 @@ const Dashboard = () => {
         todayTx?.reduce((sum, tx) => sum + Number(tx.total), 0) || 0;
       const todayTransactions = todayTx?.length || 0;
 
-      // Fetch total active products
-      let productsQuery = supabase
+      // Fetch total active products - let RLS handle visibility
+      const { count: totalProducts } = await supabase
         .from("products")
         .select("*", { count: "exact", head: true })
         .eq("is_active", true);
 
-      if (userId) {
-        productsQuery = productsQuery.eq("user_id", userId);
-      }
-
-      const { count: totalProducts } = await productsQuery;
-
-      // Fetch low stock products (stock < 10)
-      let lowStockQuery = supabase
+      // Fetch low stock products (stock < 10) - let RLS handle visibility
+      const { data: lowStock, count: lowStockCount } = await supabase
         .from("products")
         .select("id, name, sku, stock, price, categories(name)", {
           count: "exact",
@@ -117,12 +108,6 @@ const Dashboard = () => {
         .eq("is_active", true)
         .order("stock", { ascending: true })
         .limit(5);
-
-      if (userId) {
-        lowStockQuery = lowStockQuery.eq("user_id", userId);
-      }
-
-      const { data: lowStock, count: lowStockCount } = await lowStockQuery;
 
       // Fetch recent transactions
       // Don't filter by user_id - let RLS handle visibility
@@ -135,53 +120,12 @@ const Dashboard = () => {
 
       const { data: recent } = await recentQuery;
 
-      // Fetch top selling products (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      // First get transactions in the period
-      let topTxQuery = supabase
-        .from("transaction_items")
-        .select("product_id, product_name, quantity")
-        .gte("created_at", thirtyDaysAgo.toISOString());
-
-      // Note: We need to join with transactions to filter by user_id
-      // For simplicity, we'll filter the results after fetching
-
-      const { data: topItems } = await topTxQuery;
-
-      // Aggregate top products
-      const productMap = {};
-      (topItems || []).forEach((item) => {
-        if (!productMap[item.product_id]) {
-          productMap[item.product_id] = {
-            product_name: item.product_name,
-            total_sold: 0,
-          };
-        }
-        productMap[item.product_id].total_sold += item.quantity;
-      });
-
-      const sortedTopProducts = Object.values(productMap)
-        .sort((a, b) => b.total_sold - a.total_sold)
-        .slice(0, 5);
-
-      // Fetch 7-day revenue data
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-      sevenDaysAgo.setHours(0, 0, 0, 0);
-
-      let weekQuery = supabase
+      // Fetch 7-day revenue data - let RLS handle visibility
+      const { data: weekTx } = await supabase
         .from("transactions")
         .select("total, created_at")
         .gte("created_at", sevenDaysAgo.toISOString())
         .order("created_at", { ascending: true });
-
-      if (userId) {
-        weekQuery = weekQuery.eq("user_id", userId);
-      }
-
-      const { data: weekTx } = await weekQuery;
 
       // Build 7-day chart data
       const dayMap = {};
@@ -204,6 +148,46 @@ const Dashboard = () => {
           dayMap[key].orders += 1;
         }
       });
+
+      // Fetch top selling products (last 30 days)
+      // First get visible transactions (respects RLS), then get their items
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Get transactions first - this respects RLS
+      const { data: topTransactions } = await supabase
+        .from("transactions")
+        .select("id")
+        .gte("created_at", thirtyDaysAgo.toISOString());
+
+      const transactionIds = (topTransactions || []).map((t) => t.id);
+
+      // Then get items only for visible transactions
+      let topItems = [];
+      if (transactionIds.length > 0) {
+        const { data: items } = await supabase
+          .from("transaction_items")
+          .select("product_id, product_name, quantity")
+          .in("transaction_id", transactionIds);
+
+        topItems = items || [];
+      }
+
+      // Aggregate top products
+      const productMap = {};
+      (topItems || []).forEach((item) => {
+        if (!productMap[item.product_id]) {
+          productMap[item.product_id] = {
+            product_name: item.product_name,
+            total_sold: 0,
+          };
+        }
+        productMap[item.product_id].total_sold += item.quantity;
+      });
+
+      const sortedTopProducts = Object.values(productMap)
+        .sort((a, b) => b.total_sold - a.total_sold)
+        .slice(0, 5);
 
       // Only update state if component is still mounted
       if (!isMounted.current) return;
