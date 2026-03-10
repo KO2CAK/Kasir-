@@ -12,11 +12,13 @@ import {
   Store,
   Wallet,
   BarChart3,
+  Users,
 } from "lucide-react";
 
 import useAuthStore from "@/stores/authStore";
 
-const navigation = [
+// Admin navigation - full access
+const adminNavigation = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -48,9 +50,33 @@ const navigation = [
     icon: BarChart3,
   },
   {
+    name: "Users",
+    href: "/users",
+    icon: Users,
+  },
+  {
     name: "Settings",
     href: "/settings",
     icon: Settings,
+  },
+];
+
+// Cashier navigation - limited access
+const cashierNavigation = [
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Cashier",
+    href: "/cashier",
+    icon: ShoppingCart,
+  },
+  {
+    name: "Transactions",
+    href: "/transactions",
+    icon: Receipt,
   },
 ];
 
@@ -58,6 +84,10 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, profile } = useAuthStore();
+
+  // Get navigation based on user role
+  const isAdmin = profile?.role === "admin";
+  const navigation = isAdmin ? adminNavigation : cashierNavigation;
 
   const handleSignOut = async () => {
     try {
@@ -161,7 +191,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 {profile.role || "cashier"}
               </p>
             </div>
-          </div>
         )}
 
         <button
