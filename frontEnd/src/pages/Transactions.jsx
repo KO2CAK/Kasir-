@@ -57,20 +57,14 @@ const Transactions = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data: sessionData } = await supabase.auth.getUser();
-      const userId = sessionData?.user?.id;
-
-      let query = supabase
+      // Don't filter by user_id - let RLS handle visibility
+      // RLS will return:
+      // - For admin: their own transactions (user_id = admin_id)
+      // - For cashier: transactions where they are the cashier OR their owner's transactions
+      const { data, error } = await supabase
         .from("transactions")
         .select("*, profiles!transactions_cashier_id_fkey(full_name)")
         .order("created_at", { ascending: false });
-
-      // Filter by user_id if logged in (for multi-tenant)
-      if (userId) {
-        query = query.eq("user_id", userId);
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
 
