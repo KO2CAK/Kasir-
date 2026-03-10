@@ -54,8 +54,15 @@ const Register = () => {
         "admin",
       );
 
-      if (data?.user?.identities?.length === 0) {
-        toast.error("An account with this email already exists");
+      // Check if user was created but needs email confirmation
+      if (
+        data?.user &&
+        data?.user.identities &&
+        data.user.identities.length === 0
+      ) {
+        toast.error(
+          "An account with this email already exists but is not verified. Please check your email for the confirmation link, or try logging in.",
+        );
       } else if (data?.session) {
         toast.success("Account created successfully! Welcome!");
         navigate("/dashboard");
