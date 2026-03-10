@@ -38,10 +38,33 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
+      if (!userId) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("account_id")
+        .eq("id", userId)
+        .single();
+
+      const accountId = profileData?.account_id;
+
+      if (!accountId) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("account_id", currentProfile?.account_id)
+        .eq("account_id", accountId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       setUsers(data || []);
