@@ -338,9 +338,9 @@ const Settings = () => {
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="flex flex-col items-center gap-2 text-dark-400 hover:text-dark-300"
+                            className="flex flex-col items-center justify-center gap-2 text-dark-400 hover:text-dark-300 w-full py-4"
                           >
-                            <Upload className="w-8 h-8 content-center" />
+                            <Upload className="w-10 h-10" />
                             <span className="text-sm">
                               Click to upload QRIS image
                             </span>
