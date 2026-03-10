@@ -125,15 +125,13 @@ const Dashboard = () => {
       const { data: lowStock, count: lowStockCount } = await lowStockQuery;
 
       // Fetch recent transactions
+      // Don't filter by user_id - let RLS handle visibility
+      // RLS will return appropriate transactions based on user role
       let recentQuery = supabase
         .from("transactions")
         .select("*, profiles!transactions_cashier_id_fkey(full_name)")
         .order("created_at", { ascending: false })
         .limit(5);
-
-      if (userId) {
-        recentQuery = recentQuery.eq("user_id", userId);
-      }
 
       const { data: recent } = await recentQuery;
 
