@@ -28,7 +28,6 @@ const adminNavigation = [
 ];
 
 const cashierNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Cashier", href: "/cashier", icon: ShoppingCart },
   { name: "Transactions", href: "/transactions", icon: Receipt },
 ];

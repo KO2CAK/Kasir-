@@ -117,6 +117,11 @@ const Cashier = () => {
       const { data: sessionData } = await supabase.auth.getUser();
       const userId = sessionData?.user?.id;
 
+      // With the new RLS policies, the database will automatically return:
+      // - Products owned by the user (if admin)
+      // - Products owned by the user's owner (if cashier)
+      // No need to manually fetch admin's products separately!
+
       let query = supabase
         .from("products")
         .select("*, categories(name)")
@@ -124,49 +129,18 @@ const Cashier = () => {
         .gt("stock", 0)
         .order("name");
 
-      // Filter by user_id for user's own products
-      // OR if user is a cashier, also get products owned by their admin (owner_id)
-      if (userId) {
-        // First get products owned by this user
-        query = query.eq("user_id", userId);
-      }
-
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // If user is a cashier, also fetch products owned by their admin
-      let additionalProducts = [];
-      if (userId) {
-        // Check if user has an owner (is a cashier)
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("owner_id")
-          .eq("id", userId)
-          .single();
-
-        if (profileData?.owner_id) {
-          // Fetch products owned by the admin
-          const { data: adminProducts } = await supabase
-            .from("products")
-            .select("*, categories(name)")
-            .eq("is_active", true)
-            .gt("stock", 0)
-            .eq("user_id", profileData.owner_id)
-            .order("name");
-
-          if (adminProducts) {
-            additionalProducts = adminProducts;
-          }
-        }
-      }
-
-      // Combine products (user's own + admin's)
-      const allProducts = [...(data || []), ...additionalProducts];
-
       // Only update state if component is still mounted
       if (isMounted.current) {
-        setProducts(allProducts);
+        // Deduplicate products by ID to prevent duplicates from RLS issues
+        const uniqueProducts = (data || []).filter(
+          (product, index, self) =>
+            index === self.findIndex((p) => p.id === product.id),
+        );
+        setProducts(uniqueProducts);
       }
     } catch (error) {
       toast.error("Failed to fetch products");
@@ -183,50 +157,21 @@ const Cashier = () => {
     if (!isMounted.current) return;
 
     try {
-      const { data: sessionData } = await supabase.auth.getUser();
-      const userId = sessionData?.user?.id;
+      // With the new RLS policies, the database will automatically return:
+      // - Categories owned by the user (if admin)
+      // - Categories owned by the user's owner (if cashier)
+      // No need to manually fetch admin's categories separately!
 
-      let query = supabase.from("categories").select("*").order("name");
-
-      // Filter by user_id for user's own categories
-      if (userId) {
-        query = query.eq("user_id", userId);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
 
       if (error) throw error;
 
-      // If user is a cashier, also fetch categories owned by their admin
-      let additionalCategories = [];
-      if (userId) {
-        // Check if user has an owner (is a cashier)
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("owner_id")
-          .eq("id", userId)
-          .single();
-
-        if (profileData?.owner_id) {
-          // Fetch categories owned by the admin
-          const { data: adminCategories } = await supabase
-            .from("categories")
-            .select("*")
-            .eq("user_id", profileData.owner_id)
-            .order("name");
-
-          if (adminCategories) {
-            additionalCategories = adminCategories;
-          }
-        }
-      }
-
-      // Combine categories (user's own + admin's)
-      const allCategories = [...(data || []), ...additionalCategories];
-
       // Only update state if component is still mounted
       if (isMounted.current) {
-        setCategories(allCategories);
+        setCategories(data || []);
       }
     } catch (error) {
       console.error(error);
