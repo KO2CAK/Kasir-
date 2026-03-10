@@ -135,7 +135,12 @@ const Cashier = () => {
 
       // Only update state if component is still mounted
       if (isMounted.current) {
-        setProducts(data || []);
+        // Deduplicate products by ID to prevent duplicates from RLS issues
+        const uniqueProducts = (data || []).filter(
+          (product, index, self) =>
+            index === self.findIndex((p) => p.id === product.id),
+        );
+        setProducts(uniqueProducts);
       }
     } catch (error) {
       toast.error("Failed to fetch products");
