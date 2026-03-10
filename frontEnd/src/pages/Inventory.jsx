@@ -9,6 +9,9 @@ import {
   Tag,
   X,
   PackagePlus,
+  Image,
+  Upload,
+  XCircle,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -880,14 +883,64 @@ const Inventory = () => {
                 </button>
               </div>
             </div>
-            <Input
-              label="Image URL"
-              placeholder="https://..."
-              value={formData.image_url}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, image_url: e.target.value }))
-              }
-            />
+
+            {/* Product Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">
+                Product Image
+              </label>
+              {formData.image_url ? (
+                <div className="relative group">
+                  <div className="relative rounded-xl overflow-hidden border border-dark-600 bg-dark-900/50 p-2">
+                    <img
+                      src={formData.image_url}
+                      alt="Product preview"
+                      className="w-full h-32 object-contain rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, image_url: "" }))
+                        }
+                        className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors"
+                      >
+                        <XCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-dark-500 mt-1.5 text-center">
+                    Click to remove image
+                  </p>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-dark-600 rounded-xl p-6 hover:border-primary-500/50 transition-colors bg-dark-900/30">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-dark-700/50 flex items-center justify-center mb-3">
+                      <Image className="w-6 h-6 text-dark-400" />
+                    </div>
+                    <p className="text-sm text-dark-300 font-medium mb-1">
+                      Drop image here or click to upload
+                    </p>
+                    <p className="text-xs text-dark-500 mb-3">
+                      PNG, JPG up to 2MB
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="Or paste image URL..."
+                      value={formData.image_url}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          image_url: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded-lg text-sm text-dark-200 placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
