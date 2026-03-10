@@ -47,25 +47,13 @@ const Users = () => {
         return;
       }
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("account_id")
-        .eq("id", userId)
-        .single();
-
-      const accountId = profileData?.account_id;
-
-      if (!accountId) {
-        setUsers([]);
-        setLoading(false);
-        return;
-      }
-
+      // Fetch users where owner_id matches the current admin's ID
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("account_id", accountId)
+        .eq("owner_id", userId)
         .order("created_at", { ascending: false });
+
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
@@ -88,18 +76,33 @@ const Users = () => {
         if (error) throw error;
         toast.success("User updated successfully");
       } else {
-        const { error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.full_name,
-              role: formData.role,
-              account_id: currentProfile.account_id,
+        // Sign up the new user
+        const { data: signupData, error: authError } =
+          await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              data: {
+                full_name: formData.full_name,
+                role: formData.role,
+              },
             },
-          },
-        });
+          });
         if (authError) throw authError;
+
+        // After signup, set the owner_id to link this employee to the current admin
+        if (signupData?.user) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({ owner_id: currentProfile.id })
+            .eq("id", signupData.user.id);
+
+          if (profileError) {
+            console.error("Error setting owner_id:", profileError);
+            // Continue anyway - the user was created successfully
+          }
+        }
+
         toast.success("User created. Check email to verify.");
       }
       setShowModal(false);
