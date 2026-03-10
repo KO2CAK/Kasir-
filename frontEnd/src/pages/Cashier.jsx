@@ -202,6 +202,9 @@ const Cashier = () => {
     setProcessing(true);
 
     try {
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+
       const transactionNumber = generateTransactionNumber();
       const subtotal = getSubtotal();
       const discountAmount = getDiscountAmount();
@@ -215,6 +218,7 @@ const Cashier = () => {
           {
             transaction_number: transactionNumber,
             cashier_id: user.id,
+            user_id: userId,
             subtotal: subtotal,
             discount: discountAmount,
             tax: taxAmount,
